@@ -96,9 +96,6 @@ if (!isset($_SESSION['loggedin'])) {
                     <div class="graph-container">
                         <?php include 'employee_table_widget.php'; ?>
                     </div>
-                    <div class="graph-container">
-                        <?php include 'calendar.php'; ?>
-                    </div>
                 </div>
                 <div class="container-right">
                     <div class="graph-container">
