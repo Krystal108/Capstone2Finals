@@ -23,27 +23,47 @@
                             <tr>
                                 <th>Name</th>
                                 <th>Position</th>
+                                <th>Basic Pay (Weekly)</th>
                                 <th>Daily Rate</th>
-                                <th>Weekly Pay</th>
                                 <th>Overtime Pay</th>
                                 <th>Late Deduct</th>
                                 <th>SSS Deduct</th>
                                 <th>Pag-IBIG Deduct</th>
                                 <th>PhilHealth Deduct</th>
+                                <th>Total Deduct</th>
                                 <th>Date Created</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody class="payroll-table">
+                            <!-- Dynamic Content from JavaScript -->
                         </tbody>
                     </table>
                 </div>
-                <div class="d-flex justify-content-between mt-3">
-                    <div>
-                        <input type="text" class="form-control" id="search_id" placeholder="Search by ID">
-                    </div>
-                    <div>
-                        <button class="btn btn-primary" onclick="searchPayroll()">Search</button>
-                        <button class="btn btn-primary" type="button" data-toggle="modal" data-target="#addPayrollModal">Add Record</button>
+            </div>
+            <div style="border-top:5px solid #131313; width:100%; height:1px;"></div>
+            <div class="container-search" style="height:100%;">
+                <div class="search-bar">
+                    <form method="GET" action="" class="form-inline">
+                        <div class="input-group mb-3 flex-grow-1">
+                            <input type="text" class="form-control" name="search_id" placeholder="Search by ID" style="border-radius: 10px 0 0 10px; border: 3px solid #131313; height:42px;">
+                            <div class="input-group-append">
+                                <button class="btn btn-primary" type="button" style="border-radius: 0; border: 3px solid #131313;" onclick="searchPayroll()">Search</button>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary mb-3" type="button" data-toggle="modal" data-target="#addPayrollModal" style="border-radius: 0 10px 10px 0; border: 3px solid #131313;">Add Record</button>
+                    </form>
+                </div>
+                <div class="tool-bar">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div style="color: #FFFAFA;">
+                            <span id="selected-count">0</span> items selected
+                        </div>
+                        <div class="d-flex align-items-center" style="gap:10px;">
+                            <button class="btn btn-danger" disabled onclick="deletePayroll()">Delete</button>
+                            <button class="btn btn-primary" disabled data-toggle="modal" data-target="#editTaskModal">Edit</button>
+                            <button class="btn btn-info" onclick="resetTable()">Reset</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -54,13 +74,13 @@
     <div class="modal fade" id="addPayrollModal" tabindex="-1" role="dialog" aria-labelledby="addPayrollModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addPayrollModalLabel">New Payroll Record</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
                 <form id="addPayrollForm">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addPayrollModalLabel">New Payroll Record</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
                     <div class="modal-body">
                         <div class="form-group">
                             <label for="name">Name</label>
@@ -71,7 +91,7 @@
                             <input type="text" class="form-control" id="position" name="position" required>
                         </div>
                         <div class="form-group">
-                            <label for="basic_pay">Weekly Pay</label>
+                            <label for="basic_pay">Basic Pay (Weekly)</label>
                             <input type="number" class="form-control" id="basic_pay" name="basic_pay" required>
                         </div>
                         <div class="form-group">
@@ -106,68 +126,54 @@
 
     <!-- JavaScript -->
     <script>
-        // Compute Daily Rate
-        function computeDailyRate(weeklyPay) {
-            return (parseFloat(weeklyPay) / 5).toFixed(2); // Assuming 5 working days in a week
-        }
-
-        // Load Payroll Records
         async function loadPayroll() {
-            try {
-                const response = await fetch('/load-payroll', { method: 'GET' });
-                const data = await response.json();
+            const response = await fetch('/api/load-payroll');
+            const data = await response.json();
+            const tbody = document.querySelector('.payroll-table');
+            tbody.innerHTML = '';
 
-                if (data.success) {
-                    const tbody = document.querySelector('.payroll-table');
-                    tbody.innerHTML = '';
+            data.forEach(record => {
+                const dailyRate = (record.basic_pay / 5).toFixed(2); // Calculate Daily Rate
+                const totalDeduct = parseFloat(record.late_deduct) + parseFloat(record.sss_deduct) + parseFloat(record.pagibig_deduct) + parseFloat(record.philhealth_deduct);
 
-                    data.payroll.forEach(record => {
-                        const dailyRate = computeDailyRate(record.basic_pay);
-
-                        tbody.innerHTML += `
-                            <tr>
-                                <td>${record.name}</td>
-                                <td>${record.position}</td>
-                                <td>${dailyRate}</td>
-                                <td>${record.basic_pay}</td>
-                                <td>${record.overtime_pay}</td>
-                                <td>${record.late_deduct}</td>
-                                <td>${record.sss_deduct}</td>
-                                <td>${record.pagibig_deduct}</td>
-                                <td>${record.philhealth_deduct}</td>
-                                <td>${record.date_created}</td>
-                            </tr>
-                        `;
-                    });
-                }
-            } catch (error) {
-                console.error('Error loading payroll:', error);
-            }
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${record.name}</td>
+                        <td>${record.position}</td>
+                        <td>${record.basic_pay}</td>
+                        <td>${dailyRate}</td>
+                        <td>${record.overtime_pay}</td>
+                        <td>${record.late_deduct}</td>
+                        <td>${record.sss_deduct}</td>
+                        <td>${record.pagibig_deduct}</td>
+                        <td>${record.philhealth_deduct}</td>
+                        <td>${totalDeduct}</td>
+                        <td>${record.date_created}</td>
+                        <td>
+                            <button class="btn btn-info" onclick="editRecord(${record.id})">Edit</button>
+                        </td>
+                    </tr>
+                `;
+            });
         }
 
-        // Submit New Payroll Record
-        document.getElementById('addPayrollForm').addEventListener('submit', async function(event) {
-            event.preventDefault();
-
-            const formData = new FormData(event.target);
-            const data = Object.fromEntries(formData);
-
-            const response = await fetch('/add-payroll', {
+        document.getElementById('addPayrollForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const response = await fetch('/api/add-payroll', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
+                body: formData
             });
 
             if (response.ok) {
-                alert('Record added successfully!');
+                alert('Record added successfully');
                 loadPayroll();
                 $('#addPayrollModal').modal('hide');
             } else {
-                alert('Error adding record.');
+                alert('Error adding record');
             }
         });
 
-        // Initial Load
         loadPayroll();
     </script>
 </body>
