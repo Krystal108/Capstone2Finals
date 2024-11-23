@@ -1,29 +1,3 @@
-<?php
-session_start();
-
-$username = isset($_SESSION['username']) ? $_SESSION['username'] : 'Guest';
-
-// Check if the user is logged in 
-if (!isset($_SESSION['loggedin'])) {
-    header('Location: ../welcome.php');
-    exit();
-}
-
-$host = "localhost";
-$user = "root";
-$password = "";
-$database = "hr_management";
-$port = 3307;
-
-// mysqli connection
-$conn = new mysqli($host, $user, $password, $database, $port);
-
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
-?>
-    
 <!DOCTYPE html>
 <html lang="en">
 <head>
