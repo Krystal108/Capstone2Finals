@@ -65,11 +65,8 @@ $username = isset($_SESSION['username']) ? $_SESSION['username'] : 'Guest';
                                 <tr>
                                     <th>Name</th>
                                     <th>Position</th>
-                                    <th>Time In (Breaks)</th>
-                                    <th>Time Out (Breaks)</th>
-                                    <th>Time In (Lunch)</th>
-                                    <th>Time Out (Lunch)</th>
-                                    <th>End of Day</th>
+                                    <th>Time In </th>
+                                    <th>Time Out </th>
                                     <th>Date</th>
                                 </tr>
                             </thead>
@@ -137,82 +134,81 @@ $username = isset($_SESSION['username']) ? $_SESSION['username'] : 'Guest';
         logoName.textContent = 'Attendance Check';
 
         // load attendance data
-        async function loadAttendance() {
-            try:
-                const response = await fetch('https://frfqbkrj-5000.asse.devtunnels.ms/load-attendance', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
+      async function loadAttendance() {
 
-                const data = await response.json();
-                console.log(data);
+    try {
+        const response = await fetch('https://frfqbkrj-5000.asse.devtunnels.ms/load-attendance', {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' } // Fixed headers
+        });
 
-                if(data.success) {
-                    const tbody = document.querySelector('.attendance-table');
-                    tbody.innerHTML = '';
+        const data = await response.json();
+        console.log(data);
 
-                    const attendanceCount = data.attendance.length;
+        if (data.success) {
+            const tbody = document.querySelector('.attendance-table');
+            tbody.innerHTML = '';
 
-                    if(attendanceCount > 0) {
-                        for(let i = 0; i < attendanceCount; i++) {
-                            const tr = document.createElement('tr');
-                            tr.innerHTML = `<td>${data.attendance[i].leave_type}</td><td>${data.attendance[i].start_date}</td><td>${data.attendance[i].end_date}</td><td>${data.attendance[i].status}</td>`;
-                            tbody.appendChild(tr);
-                        }
-                    } else {
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = '<td colspan="4">No data found</td>';
-                        tbody.appendChild(tr);
-                    }
+            const attendanceCount = data.attendance.length;
+
+            if (attendanceCount > 0) {
+                for (let i = 0; i < attendanceCount; i++) {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td>${data.attendance[i].leave_type}</td><td>${data.attendance[i].start_date}</td><td>${data.attendance[i].end_date}</td><td>${data.attendance[i].status}</td>`;
+                    tbody.appendChild(tr);
                 }
-            catch (error) {
-                console.error(error);
+            } else {
+                const tr = document.createElement('tr');
+                tr.innerHTML = '<td colspan="4">No data found</td>';
+                tbody.appendChild(tr);
             }
         }
+    } catch (error) {
+        console.error(error);
+    } // Ensure this bracket closes the function
+}
 
-        // Call loadAttendance function
-        loadAttendance();
+// Call loadAttendance function
+loadAttendance();
 
-        // load time in data
-        async function loadTimeIn() {
-            try {
-                const response = await fetch('https://frfqbkrj-5000.asse.devtunnels.ms/load-time-in', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
+// load time in data
+async function loadTimeIn() {
+    try {
+        const response = await fetch('https://frfqbkrj-5000.asse.devtunnels.ms/load-time-in', {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        });
 
-                const data = await response.json();
-                console.log(data);
+        const data = await response.json();
+        console.log(data);
 
-                if(data.success) {
-                    const tbody = document.querySelector('.time-in-table');
-                    tbody.innerHTML = '';
+        if (data.success) {
+            const tbody = document.querySelector('.time-in-table');
+            tbody.innerHTML = '';
 
-                    const timeInCount = data.time_in.length;
+            const timeInCount = data.time_in.length;
 
-                    if(timeInCount > 0) {
-                        for(let i = 0; i < timeInCount; i++) {
-                            const tr = document.createElement('tr');
-                            tr.innerHTML = `<td>${data.time_in[i].name}</td><td>${data.time_in[i].position}</td><td>${data.time_in[i].time_in_breaks}</td><td>${data.time_in[i].time_out_breaks}</td><td>${data.time_in[i].time_in_lunch}</td><td>${data.time_in[i].time_out_lunch}</td><td>${data.time_in[i].end_of_day}</td><td>${data.time_in[i].date}</td>`;
-                            tbody.appendChild(tr);
-                        }
-                    } else {
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = '<td colspan="8">No data found</td>';
-                        tbody.appendChild(tr);
-                    }
+            if (timeInCount > 0) {
+                for (let i = 0; i < timeInCount; i++) {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td>${data.time_in[i].name}</td><td>${data.time_in[i].position}</td><td>${data.time_in[i].time_in}</td><td>${data.time_in[i].time_out}</td><td>${data.time_in[i].date}</td>`;
+                    tbody.appendChild(tr);
                 }
-            } catch (error) {
-                console.error(error);
+            } else {
+                const tr = document.createElement('tr');
+                tr.innerHTML = '<td colspan="8">No data found</td>';
+                tbody.appendChild(tr);
             }
         }
+    } catch (error) {
+        console.error(error);
+    }
+}
 
-        // Call loadTimeIn function
-        loadTimeIn();
+// Call loadTimeIn function
+loadTimeIn();
+
+
 
 
     </script>
