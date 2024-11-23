@@ -16,7 +16,36 @@
             <div class="container-top">
                 <?php include 'header_2.php'; ?>
             </div>
+
+            <!-- Search Bar -->
             <div class="container-search">
+                <div class="search-bar">
+                    <form method="GET" action="" class="form-inline">
+                        <div class="input-group mb-3 flex-grow-1">
+                            <input type="text" class="form-control" name="search_id" placeholder="Search by ID" style="border-radius: 10px 0 0 10px; border: 3px solid #131313; height:42px;">
+                            <div class="input-group-append">
+                                <button class="btn btn-primary" type="button" style="border-radius: 0; border: 3px solid #131313;" onclick="searchPayroll()">Search</button>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary mb-3" type="button" data-toggle="modal" data-target="#addPayrollModal" style="border-radius: 0 10px 10px 0; border: 3px solid #131313;">Add Record</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="container-search" style="height:100%;">
+                <div class="tool-bar">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div style="color: #FFFAFA;">
+                            <span id="selected-count">0</span> items selected
+                        </div>
+                        <div class="d-flex align-items-center" style="gap:10px;">
+                            <button class="btn btn-danger" disabled onclick="deletePayroll()">Delete</button>
+                            <button class="btn btn-primary" disabled data-toggle="modal" data-target="#editTaskModal">Edit</button>
+                            <button class="btn btn-info" onclick="resetTable()">Reset</button>
+                        </div>
+                    </div>
+                </div>
                 <div class="table-container">
                     <table class="table table-bordered table-striped">
                         <thead>
@@ -39,32 +68,6 @@
                             <!-- Dynamic Content from JavaScript -->
                         </tbody>
                     </table>
-                </div>
-            </div>
-            <div style="border-top:5px solid #131313; width:100%; height:1px;"></div>
-            <div class="container-search" style="height:100%;">
-                <div class="search-bar">
-                    <form method="GET" action="" class="form-inline">
-                        <div class="input-group mb-3 flex-grow-1">
-                            <input type="text" class="form-control" name="search_id" placeholder="Search by ID" style="border-radius: 10px 0 0 10px; border: 3px solid #131313; height:42px;">
-                            <div class="input-group-append">
-                                <button class="btn btn-primary" type="button" style="border-radius: 0; border: 3px solid #131313;" onclick="searchPayroll()">Search</button>
-                            </div>
-                        </div>
-                        <button class="btn btn-primary mb-3" type="button" data-toggle="modal" data-target="#addPayrollModal" style="border-radius: 0 10px 10px 0; border: 3px solid #131313;">Add Record</button>
-                    </form>
-                </div>
-                <div class="tool-bar">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div style="color: #FFFAFA;">
-                            <span id="selected-count">0</span> items selected
-                        </div>
-                        <div class="d-flex align-items-center" style="gap:10px;">
-                            <button class="btn btn-danger" disabled onclick="deletePayroll()">Delete</button>
-                            <button class="btn btn-primary" disabled data-toggle="modal" data-target="#editTaskModal">Edit</button>
-                            <button class="btn btn-info" onclick="resetTable()">Reset</button>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
