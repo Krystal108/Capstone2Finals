@@ -1,17 +1,27 @@
 <?php
-$host = 'localhost';
-$user = 'root';
-$password = '';
-$database = 'hr_management';
+session_start();
+
+// Ensure user is logged in
+$username = isset($_SESSION['username']) ? $_SESSION['username'] : 'Guest';
+if (!isset($_SESSION['loggedin'])) {
+    header('Location: ../welcome.php');
+    exit();
+}
+
+// Database configuration
+$host = "localhost";
+$user = "root";
+$password = "";
+$database = "hr_management";
 $port = 3307;
 
+// Database connection
 $conn = new mysqli($host, $user, $password, $database, $port);
-
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 ?>
-    
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -34,7 +44,7 @@ if ($conn->connect_error) {
             <!-- Search Bar -->
             <div class="container-search">
                 <div class="search-bar">
-                    <form method="GET" action="" class="form-inline">
+                    <form method="GET" class="form-inline">
                         <div class="input-group mb-3 flex-grow-1">
                             <input type="text" class="form-control" name="search_id" placeholder="Search by ID" style="border-radius: 10px 0 0 10px; border: 3px solid #131313; height:42px;">
                             <div class="input-group-append">
@@ -46,7 +56,7 @@ if ($conn->connect_error) {
                 </div>
             </div>
 
-            <!-- Table -->
+            <!-- Payroll Table -->
             <div class="container-search" style="height:100%;">
                 <div class="tool-bar">
                     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -55,7 +65,7 @@ if ($conn->connect_error) {
                         </div>
                         <div class="d-flex align-items-center" style="gap:10px;">
                             <button class="btn btn-danger" disabled onclick="deletePayroll()">Delete</button>
-                            <button class="btn btn-primary" disabled data-toggle="modal" data-target="#editTaskModal">Edit</button>
+                            <button class="btn btn-primary" disabled>Edit</button>
                             <button class="btn btn-info" onclick="resetTable()">Reset</button>
                         </div>
                     </div>
@@ -79,7 +89,7 @@ if ($conn->connect_error) {
                             </tr>
                         </thead>
                         <tbody class="payroll-table">
-                            <!-- Dynamic Content from JavaScript -->
+                            <!-- Dynamic Content Loaded via JavaScript -->
                         </tbody>
                     </table>
                 </div>
@@ -141,30 +151,41 @@ if ($conn->connect_error) {
         </div>
     </div>
 
-    <!-- JavaScript -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script>
-        // Ensure Add Modal works and handles input
-        document.getElementById('addPayrollForm').addEventListener('submit', function(e) {
+        // Add Payroll Record
+        document.getElementById('addPayrollForm').addEventListener('submit', function (e) {
             e.preventDefault();
             const formData = new FormData(this);
 
-            // Mock backend functionality
-            console.log('New Payroll Record Added:');
-            for (const pair of formData.entries()) {
-                console.log(`${pair[0]}: ${pair[1]}`);
-            }
-
-            alert('Record Added Successfully!');
-            $('#addPayrollModal').modal('hide'); // Close the modal after submission
+            fetch('add_record.php', {
+                method: 'POST',
+                body: formData,
+            })
+                .then(response => response.text())
+                .then(result => {
+                    alert(result);
+                    fetch('fetch_payroll.php')
+                        .then(response => response.text())
+                        .then(data => {
+                            document.querySelector('.payroll-table').innerHTML = data;
+                        });
+                    $('#addPayrollModal').modal('hide');
+                })
+                .catch(error => console.error('Error:', error));
         });
 
-        // Reset table functionality (for demonstration purposes)
-        function resetTable() {
-            alert('Resetting the table...');
+        // Load Payroll Records
+        function loadPayroll() {
+            fetch('fetch_payroll.php')
+                .then(response => response.text())
+                .then(data => {
+                    document.querySelector('.payroll-table').innerHTML = data;
+                });
         }
+        loadPayroll();
     </script>
 </body>
 </html>
