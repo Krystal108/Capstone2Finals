@@ -3,7 +3,7 @@
 $host = "localhost";
 $user = "root";
 $password = ""; // Replace with your password
-$database = "hr_management";
+$database = "workers_salary";
 $port = 3306;
 
 $conn = new mysqli($host, $user, $password, $database, $port);
