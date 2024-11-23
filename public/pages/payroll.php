@@ -12,7 +12,7 @@ if (!isset($_SESSION['loggedin'])) {
 $host = "localhost";
 $user = "root";
 $password = "";
-$database = "hr_management1";
+$database = "workers_salary";
 $port = 3307;
 
 // Database connection
