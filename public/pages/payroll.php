@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
-    <?php include 'sidebar.php'; ?>
+    <?php include 'sidebar_small.php'; ?>
     <div class="container-everything" style="height:100%;">
         <div class="container-all">
             <div class="container-top">
