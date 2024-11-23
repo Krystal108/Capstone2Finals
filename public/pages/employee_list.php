@@ -1,162 +1,11 @@
 <?php
 session_start([
-    'cookie_lifetime' => 86400, // Set cookie to last for 1 day (86400 seconds)
-    'read_and_close'  => false, // Keep session active
 ]);
 
 if (isset($_POST['loggedin'])) {
     $_SESSION['loggedin'] = filter_var($_POST['loggedin'], FILTER_VALIDATE_BOOLEAN); // Convert string "true" to boolean true
 }
-$host = "localhost";
-$user = "root";
-$password = "";
-$database = "factory_workers";
-$port = 3307;
 
-// mysqli connection
-$conn = new mysqli($host, $user, $password, $database, $port);
-
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
-
-// Initialize variables
-$tasksTable = 'employee_records';
-
-// Initialize search ID
-$searchId = isset($_GET['search_id']) ? $_GET['search_id'] : '';
-
-// Base query to retrieve tasks from the database
-$query = "SELECT * FROM $tasksTable";
-
-// Prepare the SQL statement
-$stmt = $conn->prepare($query);
-
-// Check if the statement was prepared successfully
-if (!$stmt) {
-    die("Query preparation failed: " . $conn->error);
-}
-
-// Bind the search ID with wildcard if a search term is provided
-if (!empty($searchId)) {
-    $searchTerm = '%' . $searchId . '%';
-    $stmt->bind_param("s", $searchTerm);
-}
-
-// Execute the query
-$stmt->execute();
-$result = $stmt->get_result();
-$tasks = $result->fetch_all(MYSQLI_ASSOC);
-
-// Add Employee
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['addTask'])) {
-        $newTask = [
-            'name' => $_POST['name'],
-            'position' => $_POST['position'],
-            'shift' => $_POST['shift'],
-            'salary' => $_POST['salary'],
-            'address' => $_POST['address'],
-            'phone_number' => $_POST['phone_number'],
-            'age' => $_POST['age'],
-            'email' => $_POST['email'],
-            'start_date' => $_POST['start_date'],
-            'photo' => !empty($_FILES['photo']['name']) ? $_FILES['photo']['name'] : 'none',
-            'status' => 'Active'
-        ];
-    
-        // Prepare the SQL statement
-        $stmt = $conn->prepare("INSERT INTO $tasksTable (name, position, shift, salary, address, phone_number, age, email, start_date, photo, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    
-        $stmt->bind_param(
-            "sssssssssbs",
-            $newTask['name'],
-            $newTask['position'],
-            $newTask['shift'],
-            $newTask['salary'],
-            $newTask['address'],
-            $newTask['phone_number'],
-            $newTask['age'],
-            $newTask['email'],
-            $newTask['start_date'],
-            $newTask['photo'],
-            $newTask['status']
-        );
-    
-        // Check if a file was uploaded and get the photo data
-        if (!empty($_FILES['photo']['tmp_name'])) {
-            $photo = file_get_contents($_FILES['photo']['tmp_name']);
-            $stmt->send_long_data(9, $photo);
-        } else {
-            // Handle the case where no photo is uploaded, if necessary
-            $stmt->send_long_data(9, null); // You can choose to send null or handle it as needed
-        }
-    
-        // Execute the statement
-        $stmt->execute();
-    }
-
-    // Edit Employee
-    if (isset($_POST['editTask'])) {
-        $editTask = [
-            'id' => $_POST['id'],
-            'name' => $_POST['name'],
-            'position' => $_POST['position'],
-            'shift' => $_POST['shift'],
-            'salary' => $_POST['salary'],
-            'address' => $_POST['address'],
-            'phone_number' => $_POST['phone_number'],
-            'age' => $_POST['age'],
-            'email' => $_POST['email'],
-            'start_date' => $_POST['start_date'],
-            'photo' => !empty($_FILES['photo']['name']) ? $_FILES['photo']['name'] : 'none',
-            'status' => 'Active'
-        ];
-    
-        // Prepare the SQL statement
-        $stmt = $conn->prepare("UPDATE employee_records SET name = ?, position = ?, shift = ?, salary = ?, address = ?, phone_number = ?, age = ?, email = ?, start_date = ?, photo = ?, status = ? WHERE id = ?");
-    
-        $stmt->bind_param(
-            "sssssssssbsi",
-            $editTask['name'],
-            $editTask['position'],
-            $editTask['shift'],
-            $editTask['salary'],
-            $editTask['address'],
-            $editTask['phone_number'],
-            $editTask['age'],
-            $editTask['email'],
-            $editTask['start_date'],
-            $editTask['photo'],
-            $editTask['status'],
-            $editTask['id']
-        );
-    
-        // Check if a file was uploaded and get the photo data
-        if (!empty($_FILES['photo']['tmp_name'])) {
-            $photo = file_get_contents($_FILES['photo']['tmp_name']);
-            $stmt->send_long_data(9, $photo);
-        } else {
-            // Handle the case where no photo is uploaded, if necessary
-            $stmt->send_long_data(9, null); // You can choose to send null or handle it as needed
-        }
-    
-        // Execute the statement
-        $stmt->execute();
-    }
-
-    if (isset($_POST['deleteTask'])) {
-        $taskIds = $_POST['task_checkbox'];
-        $placeholders = rtrim(str_repeat('?,', count($taskIds)), ',');
-        $stmt = $conn->prepare("DELETE FROM $tasksTable WHERE id IN ($placeholders)");
-        $stmt->bind_param(str_repeat('i', count($taskIds)), ...$taskIds);
-        $stmt->execute();
-    }
-
-    header('Location: employee_list.php');
-    exit();
-}
 ?>
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
@@ -189,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                                 <input type="text" class="form-control" name="search_id" placeholder="Search by ID" value="<?php echo htmlspecialchars($searchId); ?>" style="border-radius: 10px 0 0 10px; border: 3px solid #131313; height:42px;">
                                 <div class="input-group-append">
-                                    <button class="btn btn-primary" type="submit" style="border-radius: 0; border: 3px solid #131313;">Search</button>
+                                    <button class="btn btn-primary" type="button" style="border-radius: 0; border: 3px solid #131313;" onclick="searchEmployee()">Search</button>
                                 </div>
                             </div>
                             <!-- Add Task button aligned to the right -->
@@ -410,32 +259,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         logoName.textContent = 'Personnel Records';
 
         // Function to update selected count display
-function updateSelectedCount() {
-    var selectedCount = document.querySelectorAll('input[name="task_checkbox[]"]:checked').length;
-    document.getElementById('selected-count').textContent = selectedCount;
+        function updateSelectedCount() {
+            var selectedCount = document.querySelectorAll('input[name="task_checkbox[]"]:checked').length;
+            document.getElementById('selected-count').textContent = selectedCount;
 
-    // Toggle buttons based on the number of selected checkboxes
-    toggleButtons(selectedCount);
-}
+            // Toggle buttons based on the number of selected checkboxes
+            toggleButtons(selectedCount);
+        }
 
-// Function to toggle the delete and edit buttons
-function toggleButtons(selectedCount) {
-    // Get the delete and edit buttons
-    var deleteButton = document.querySelector('button[name="deleteTask"]');
-    var editButton = document.querySelector('button[name="editTaskMod"]');
+        // Function to toggle the delete and edit buttons
+        function toggleButtons(selectedCount) {
+            // Get the delete and edit buttons
+            var deleteButton = document.querySelector('button[name="deleteTask"]');
+            var editButton = document.querySelector('button[name="editTaskMod"]');
 
-    // Enable delete button if at least one checkbox is selected
-    deleteButton.disabled = selectedCount === 0;
+            // Enable delete button if at least one checkbox is selected
+            deleteButton.disabled = selectedCount === 0;
 
-    // Enable edit button only if exactly one checkbox is selected
-    editButton.disabled = selectedCount !== 1;
-}
+            // Enable edit button only if exactly one checkbox is selected
+            editButton.disabled = selectedCount !== 1;
+        }
 
-// Attach event listeners to all checkboxes
-document.querySelectorAll('input[name="task_checkbox[]"]').forEach(function(checkbox) {
-    checkbox.addEventListener('change', function() {
-        updateSelectedCount();
-    });
-});
+        // Attach event listeners to all checkboxes
+        document.querySelectorAll('input[name="task_checkbox[]"]').forEach(function(checkbox) {
+            checkbox.addEventListener('change', function() {
+                updateSelectedCount();
+            });
+        });
+
+        // Attach event listener to the form for deletion
+        document.getElementById('deleteForm').addEventListener('submit', function(event) {
+            // Prevent the form from submitting
+            event.preventDefault();
+
+            // Get the selected checkboxes
+            var selectedCheckboxes = document.querySelectorAll('input[name="task_checkbox[]"]:checked');
+
+            // Get the IDs of the selected tasks
+            var taskIds = Array.from(selectedCheckboxes).map(function(checkbox) {
+                return checkbox.value;
+            });
+
+            // Confirm with the user before deleting
+            if (confirm('Are you sure you want to delete the selected tasks?')) {
+                // Set the value of the hidden input to the selected task IDs
+                document.getElementById('deleteTask').value = taskIds.join(',');
+
+                // Submit the form
+                this.submit();
+            }
+        });
+
+        
     </script>
 </html>

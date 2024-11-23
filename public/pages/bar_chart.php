@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         document.addEventListener('DOMContentLoaded', function () {
             async function fetchBarData() {
                 try {
-                    const response = await fetch('https://6dvfd2bd-5000.asse.devtunnels.ms/charts/bar-chart', {
+                    const response = await fetch('https://frfqbkrj-5000.asse.devtunnels.ms/charts/bar-chart', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'

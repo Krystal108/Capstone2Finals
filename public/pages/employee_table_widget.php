@@ -79,7 +79,7 @@
         // Fetch the data for the table from the backend
         async function fetchEmployeeData() {
             try {
-                const response = await fetch('https://6dvfd2bd-5000.asse.devtunnels.ms/tables/employee-table');
+                const response = await fetch('https://frfqbkrj-5000.asse.devtunnels.ms/tables/employee-table');
                 const data = await response.json();
                 
                 // Log the data to the console for debugging

@@ -93,7 +93,7 @@ if (isset($_GET['user_department'])) {
             console.log(department);
 
             // Send the filter to the endpoint
-            fetch("https://6dvfd2bd-5000.asse.devtunnels.ms/task-filter", {
+            fetch("https://frfqbkrj-5000.asse.devtunnels.ms/task-filter", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

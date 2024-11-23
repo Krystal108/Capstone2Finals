@@ -96,6 +96,9 @@ if (!isset($_SESSION['loggedin'])) {
                     <div class="graph-container">
                         <?php include 'employee_table_widget.php'; ?>
                     </div>
+                    <div class="graph-container">
+                        <?php include 'calendar.php'; ?>
+                    </div>
                 </div>
                 <div class="container-right">
                     <div class="graph-container">
@@ -110,7 +113,7 @@ if (!isset($_SESSION['loggedin'])) {
         // Call endpoint /widgets/count-total-employees
         async function fetchTotalEmployees() {
             try {
-            const response = await fetch('https://6dvfd2bd-5000.asse.devtunnels.ms/widgets/count-total-employees');
+            const response = await fetch('https://frfqbkrj-5000.asse.devtunnels.ms/widgets/count-total-employees');
             const data = await response.json();
             // log it to console
             console.log(data);
@@ -126,7 +129,7 @@ if (!isset($_SESSION['loggedin'])) {
         // Call endpoint /widgets/on-time-check
         async function fetchOnTimeStatus() {
             try {
-            const response = await fetch('https://6dvfd2bd-5000.asse.devtunnels.ms/widgets/on-time-check', {
+            const response = await fetch('https://frfqbkrj-5000.asse.devtunnels.ms/widgets/on-time-check', {
                 method: 'POST',
                 headers: {
                 'Content-Type': 'application/json'

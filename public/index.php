@@ -28,6 +28,12 @@ switch ($page) {
     case 'employee-list':
         require_once __DIR__ . "/pages/employee_list.php";
         break;
+    case 'worker-eval':
+        require_once __DIR__ . "/pages/worker_eval.php";
+        break;
+    case 'attendance-check':
+        require_once __DIR__ . "/pages/attendance_check.php";
+        break;
     case null:
         require_once __DIR__ . "/pages/welcome.php";
         break;

@@ -118,8 +118,7 @@ if (isset($_SESSION['user_department'])) {
                                 <div>
                                     <form method="get" action="task_management.php">
                                         <input type="hidden" name="department" value="<?php echo htmlspecialchars($department); ?>">
-                                        <input type="hidden" name="export" value="excel">
-                                        <button type="submit" class="btn btn-success">Export to Excel</button>
+                                        <button type="submit" class="btn btn-success" onclick="exportToExcel()">Export to Excel</button>
                                     </form>
                                 </div>
                                 <button class="btn btn-info" onclick="window.location.href='/?page=task-management'">Reset</button>
@@ -301,7 +300,7 @@ if (isset($_SESSION['user_department'])) {
         <script>
             async function loadTasks() {
                 try {
-                    const response = await fetch("https://6dvfd2bd-5000.asse.devtunnels.ms/load-tasks", {
+                    const response = await fetch("https://frfqbkrj-5000.asse.devtunnels.ms/load-tasks", {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json"
@@ -421,7 +420,7 @@ if (isset($_SESSION['user_department'])) {
 
                 try {
                     // Make the delete request
-                    const response = await fetch("https://6dvfd2bd-5000.asse.devtunnels.ms/delete-task", {
+                    const response = await fetch("https://frfqbkrj-5000.asse.devtunnels.ms/delete-task", {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json"
@@ -464,7 +463,7 @@ if (isset($_SESSION['user_department'])) {
                 const duration = document.getElementById('duration').value;
                 const department = '<?php echo $_SESSION['user_department']; ?>';
 
-                fetch("https://6dvfd2bd-5000.asse.devtunnels.ms/add-task", {
+                fetch("https://frfqbkrj-5000.asse.devtunnels.ms/add-task", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
@@ -503,7 +502,7 @@ if (isset($_SESSION['user_department'])) {
                 const priority = document.getElementById('edit_priority').value;
                 const department = '<?php echo $_SESSION['user_department']; ?>';
 
-                fetch("https://6dvfd2bd-5000.asse.devtunnels.ms/edit-task", {
+                fetch("https://frfqbkrj-5000.asse.devtunnels.ms/edit-task", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
@@ -533,7 +532,7 @@ if (isset($_SESSION['user_department'])) {
                 const searchId = document.querySelector('input[name="search_id"]').value;
                 const department = '<?php echo $_SESSION['user_department']; ?>';
 
-                fetch("https://6dvfd2bd-5000.asse.devtunnels.ms/search-task", {
+                fetch("https://frfqbkrj-5000.asse.devtunnels.ms/search-task", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
@@ -587,6 +586,38 @@ if (isset($_SESSION['user_department'])) {
                     console.error("Error:", error);
                     alert("An error occurred while finding the task. Please try again.");
                 });
+            }
+
+            // Export to .xls file
+            function exportToExcel() {
+                // get the table rows
+                const rows = document.querySelectorAll('.tasks-table tr');
+
+                // initialize CSV content
+                let csvContent = '';
+
+                // 
+
+                // add headers
+                const headers = ['ID', 'Task', 'Assigned', 'Status', 'Start Date', 'Due Date', 'Completion', 'Priority', 'Duration'];
+                csvContent += headers.join(',') + '\n';
+
+                // iterate through each. row
+                rows.forEach(row => {
+                    const cols = row.querySelectorAll('td');
+                    const rowData = Array.from(cols).map(col => col.innerText).join(',');
+                    csvContent += rowData + '\n';
+                });
+
+                // create a download link
+                const downloadLink = document.createElement("a");
+
+                // set the download link attributes
+                downloadLink.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvContent);
+                downloadLink.download = 'tasks.csv';
+
+                // trigger the download
+                downloadLink.click();
             }
 
         </script>

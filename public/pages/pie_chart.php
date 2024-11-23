@@ -34,7 +34,7 @@
             // fetch the data for the pie chart from the backend
             async function fetchPieData() {
                 try {
-                    const response = await fetch('https://6dvfd2bd-5000.asse.devtunnels.ms/charts/pie-chart');
+                    const response = await fetch('https://frfqbkrj-5000.asse.devtunnels.ms/charts/pie-chart');
                     const data = await response.json();
                     
                     // Log data to the console for debugging

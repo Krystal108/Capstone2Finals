@@ -372,8 +372,8 @@
             console.log(dataPayload);
 
             // Send the image data to the Python script
-            // https://6dvfd2bd-5000.asse.devtunnels.ms/
-            fetch('https://6dvfd2bd-5000.asse.devtunnels.ms/Face_API/register', {  // Adjust the URL to your Python script's path
+            // https://frfqbkrj-5000.asse.devtunnels.ms/
+            fetch('https://frfqbkrj-5000.asse.devtunnels.ms/Face_API/register', {  // Adjust the URL to your Python script's path
                 method: 'POST',
                 body: JSON.stringify(dataPayload),
                 headers: {

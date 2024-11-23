@@ -70,9 +70,9 @@ if (!isset($_SESSION['loggedin'])) {
                             <div class="input-group mb-3 flex-grow-1">
                                 <!-- Search input and button -->
                                 <input type="hidden" name="department" value="<?php echo htmlspecialchars($department); ?>">
-                                <input type="text" class="form-control" name="search_id" placeholder="Search by ID" value="<?php echo htmlspecialchars($searchId); ?>"style="border-radius: 10px 0 0 10px; border: 3px solid #131313; height:42px;">
+                                <input type="text" class="form-control" name="search_id" placeholder="Search by ID" value=""style="border-radius: 10px 0 0 10px; border: 3px solid #131313; height:42px;">
                                 <div class="input-group-append">
-                                    <button class="btn btn-primary" type="submit" style="border-radius: 0; border: 3px solid #131313;">Search</button>
+                                    <button class="btn btn-primary" type="button" style="border-radius: 0; border: 3px solid #131313;" onclick="searchPayroll()">Search</button>
                                 </div>
                             </div>
                             <button class="btn btn-primary mb-3" type="button" data-toggle="modal" data-target="#addPayrollModal" style="border-radius: 0 10px 10px 0; border: 3px solid #131313;">Add Record</button>
@@ -88,11 +88,11 @@ if (!isset($_SESSION['loggedin'])) {
                                 
                                 <!-- Start the form for deletion -->
                                 <form method="POST" id="deleteForm" style="display:inline;">
-                                    <button type="submit" name="deleteTask" class="btn btn-danger" disabled>Del</button>
+                                    <button type="button" name="deleteTask" onclick="deletePayroll()" class="btn btn-danger" disabled>Del</button>
                                 </form>
                                 <button class="btn btn-primary" name="editTaskMod" data-toggle="modal" data-target="#editTaskModal" disabled data-id="<?php echo $task['id']; ?>">Edit</button>
                                 
-                                <button class="btn btn-info" onclick="window.location.href='payroll.php'">Reset</button>
+                                <button class="btn btn-info" onclick="window.location.href='/?pages=payroll'">Reset</button>
                             </div>
                         </div>
                     </div>
@@ -118,7 +118,7 @@ if (!isset($_SESSION['loggedin'])) {
                                 </tr>
                             </thead>
 
-                            <tbody>
+                            <tbody class="payroll-table">
                             </tbody>
                         </table>
                     </div>
@@ -271,7 +271,7 @@ if (!isset($_SESSION['loggedin'])) {
 
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button type="submit" name="addPayroll" class="btn btn-primary">Save changes</button>
+                        <button type="submit" name="addPayroll" class="btn btn-primary" onclick="newPayroll()">Save changes</button>
                     </div>
                 </form>
             </div>
@@ -363,7 +363,7 @@ if (!isset($_SESSION['loggedin'])) {
 
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button type="submit" name="editPayroll" class="btn btn-primary">Edit Changes</button>
+                        <button type="submit" name="editPayroll" class="btn btn-primary" onclick="editPayrollRecords()">Edit Changes</button>
                     </div>
                 </form>
             </div>
@@ -408,7 +408,7 @@ if (!isset($_SESSION['loggedin'])) {
         // load additional pay records
         async function loadAdditionalPay() {
             try {
-                const response = await fetch('https://6dvfd2bd-5000.asse.devtunnels.ms/load-additional-pay', {
+                const response = await fetch('https://frfqbkrj-5000.asse.devtunnels.ms/load-additional-pay', {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json'
@@ -464,7 +464,7 @@ if (!isset($_SESSION['loggedin'])) {
             const late_deduct = document.getElementById('late_deduct').value;
 
             try {
-                const response = await fetch('https://6dvfd2bd-5000.asse.devtunnels.ms/add-additional-pay', {
+                const response = await fetch('https://frfqbkrj-5000.asse.devtunnels.ms/add-additional-pay', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -494,7 +494,7 @@ if (!isset($_SESSION['loggedin'])) {
 
 
             try {
-                const response = await fetch('https://6dvfd2bd-5000.asse.devtunnels.ms/edit-additional-pay', {
+                const response = await fetch('https://frfqbkrj-5000.asse.devtunnels.ms/edit-additional-pay', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -510,12 +510,281 @@ if (!isset($_SESSION['loggedin'])) {
 
                 if (data.success) {
                     loadAdditionalPay();
+                    loadPayroll();
+
                 }
 
             } catch (error) {
                 console.error('Error:', error);
             }
         }
+
+        // Load payroll records
+        async function loadPayroll() {
+            try {
+                const response = await fetch('https://frfqbkrj-5000.asse.devtunnels.ms/load-payroll', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                console.log(data);
+
+                if (data.success) {
+                    const tbody = document.querySelector('.payroll-table');
+                    tbody.innerHTML = '';
+
+                    const payrollCount = data.payroll_id.length;
+
+                    if (payrollCount > 0) {
+                        for (let i = 0; i < payrollCount; i++) {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                                <td><input type="checkbox" name="task_checkbox[]" value="${data.payroll_id[i]}"></td>
+                                <td>${data.name[i]}</td>
+                                <td>${data.position[i]}</td>
+                                <td>${data.salary[i]}</td>
+                                <td>${data.daily_rate[i]}</td>
+                                <td>${data.basic_pay[i]}</td>
+                                <td>${data.ot_pay[i]}</td>
+                                <td>${data.late_deduct[i]}</td>
+                                <td>${data.gross_pay[i]}</td>
+                                <td>${data.sss_deduct[i]}</td>
+                                <td>${data.pagibig_deduct[i]}</td>
+                                <td>${data.philhealth_deduct[i]}</td>
+                                <td>${data.total_deduct[i]}</td>
+                                <td>${data.net_salary[i]}</td>
+                                <td>${data.date_created[i]}</td>
+                            `;
+
+                            tbody.appendChild(tr);
+                        }
+                    } else {
+                        // If there are no payroll records
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td colspan="14" class="text-center">
+                                No payroll records found
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    }
+
+                    // Update the selected count
+                    updateSelectedCount();
+
+                    // Attach event listeners to all checkboxes
+                    document.querySelectorAll('input[name="task_checkbox[]"]').forEach(function(checkbox) {
+                        checkbox.addEventListener('change', function() {
+                            updateSelectedCount();
+                        });
+
+                    });
+                } 
+
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        // Load payroll records
+        loadPayroll();
+
+        // search payroll records
+        async function searchPayroll() {
+            const searchId = document.querySelector('input[name="search_id"]').value;
+
+            try {
+                const response = await fetch('https://frfqbkrj-5000.asse.devtunnels.ms/search-payroll', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        search_id: searchId
+                    })
+                });
+
+                const data = await response.json();
+                console.log(data);
+
+                if (data.success) {
+                    const tbody = document.querySelector('.payroll-table');
+                    tbody.innerHTML = '';
+
+                    const payrollCount = data.payroll_id.length;
+
+                    if (payrollCount > 0) {
+                        for (let i = 0; i < payrollCount; i++) {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                                <td><input type="checkbox" name="task_checkbox[]" value="${data.payroll_id[i]}"></td>
+                                <td>${data.name[i]}</td>
+                                <td>${data.position[i]}</td>
+                                <td>${data.salary[i]}</td>
+                                <td>${data.daily_rate[i]}</td>
+                                <td>${data.basic_pay[i]}</td>
+                                <td>${data.ot_pay[i]}</td>
+                                <td>${data.late_deduct[i]}</td>
+                                <td>${data.gross_pay[i]}</td>
+                                <td>${data.sss_deduct[i]}</td>
+                                <td>${data.pagibig_deduct[i]}</td>
+                                <td>${data.philhealth_deduct[i]}</td>
+                                <td>${data.total_deduct[i]}</td>
+                                <td>${data.net_salary[i]}</td>
+                                <td>${data.date_created[i]}</td>
+                            `;
+
+                            tbody.appendChild(tr);
+                        }
+                    } else {
+                        // If there are no payroll records
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td colspan="14" class="text-center">
+                                No payroll records found
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    }
+                } 
+
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        // delete payroll records
+        async function deletePayroll() {
+            const selectedIds = Array.from(document.querySelectorAll('input[name="task_checkbox[]"]:checked')).map(e => e.value);
+
+            try {
+                const response = await fetch('https://frfqbkrj-5000.asse.devtunnels.ms/delete-payroll', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        selected_ids: selectedIds
+                    })
+                });
+
+                const data = await response.json();
+                console.log(data);
+
+                if (data.success) {
+                    loadPayroll();
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        // add payroll records
+        async function newPayroll() {
+            const name = document.getElementById('name').value;
+            const position = document.getElementById('position').value;
+            const salary = document.getElementById('salary').value;
+            const daily_rate = document.getElementById('daily_rate').value;
+            const basic_pay = document.getElementById('basic_pay').value;
+            const ot_pay = document.getElementById('ot_pay').value;
+            const late_deduct = document.getElementById('late_deduct').value;
+            const gross_pay = document.getElementById('gross_pay').value;
+            const sss_deduct = document.getElementById('sss_deduct').value;
+            const pagibig_deduct = document.getElementById('pagibig_deduct').value;
+            const philhealth_deduct = document.getElementById('philhealth_deduct').value;
+            const net_salary = document.getElementById('net_salary').value;
+
+            try {
+                const response = await fetch('https://frfqbkrj-5000.asse.devtunnels.ms/add-payroll', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        position: position,
+                        salary: salary,
+                        daily_rate: daily_rate,
+                        basic_pay: basic_pay,
+                        ot_pay: ot_pay,
+                        late_deduct: late_deduct,
+                        gross_pay: gross_pay,
+                        sss_deduct: sss_deduct,
+                        pagibig_deduct: pagibig_deduct,
+                        philhealth_deduct: philhealth_deduct,
+                        net_salary: net_salary
+                    })
+                });
+
+                const data = await response.json();
+                console.log(data);
+
+                if (data.success) {
+                    loadPayroll();
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        // Edit payroll records
+        async function editPayrollRecords() {
+            const id = document.querySelector('input[name="task_checkbox[]"]:checked').value;
+            const name = document.getElementById('edit_name').value;
+            const position = document.getElementById('edit_position').value;
+            const salary = document.getElementById('edit_salary').value;
+            const daily_rate = document.getElementById('edit_daily_rate').value;
+            const basic_pay = document.getElementById('edit_basic_pay').value;
+            const ot_pay = document.getElementById('edit_ot_pay').value;
+            const late_deduct = document.getElementById('edit_late_deduct').value;
+            const gross_pay = document.getElementById('edit_gross_pay').value;
+            const sss_deduct = document.getElementById('edit_sss_deduct').value;
+            const pagibig_deduct = document.getElementById('edit_pagibig_deduct').value;
+            const philhealth_deduct = document.getElementById('edit_philhealth_deduct').value;
+            const net_salary = document.getElementById('edit_net_salary').value;
+
+            try {
+                const response = await fetch('https://frfqbkrj-5000.asse.devtunnels.ms/edit-payroll', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        id: id,
+                        name: name,
+                        position: position,
+                        salary: salary,
+                        daily_rate: daily_rate,
+                        basic_pay: basic_pay,
+                        ot_pay: ot_pay,
+                        late_deduct: late_deduct,
+                        gross_pay: gross_pay,
+                        sss_deduct: sss_deduct,
+                        pagibig_deduct: pagibig_deduct,
+                        philhealth_deduct: philhealth_deduct,
+                        net_salary: net_salary
+                    })
+                });
+
+                const data = await response.json();
+                console.log(data);
+
+                if (data.success) {
+                    loadPayroll();
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+
+
     </script>
 </body>
 </html>

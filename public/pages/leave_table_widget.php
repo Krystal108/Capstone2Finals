@@ -97,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Fetch the data for the table from the backend
         async function fetchLeaveData() {
             try {
-                const response = await fetch('https://6dvfd2bd-5000.asse.devtunnels.ms/tables/leave-table', {
+                const response = await fetch('https://frfqbkrj-5000.asse.devtunnels.ms/tables/leave-table', {
                     method: 'POST',
                     headers: {
                     'Content-Type': 'application/json'

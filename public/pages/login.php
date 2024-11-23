@@ -290,7 +290,7 @@ session_start();
             console.log(dataPayload);
 
             // Send the image data to the Python script
-            fetch('https://6dvfd2bd-5000.asse.devtunnels.ms/Face_API/mark-attendance', {  // Adjust the URL to your Python script's path
+            fetch('https://frfqbkrj-5000.asse.devtunnels.ms/Face_API/mark-attendance', {  // Adjust the URL to your Python script's path
             method: 'POST',
             body: JSON.stringify(dataPayload),
             headers: {
