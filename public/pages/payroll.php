@@ -1,13 +1,3 @@
-<?php
-session_start();
-
-// Check if the user is logged in
-if (!isset($_SESSION['loggedin'])) {
-    header('Location: /?page=login');
-    exit();
-}
-?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -40,7 +30,6 @@ if (!isset($_SESSION['loggedin'])) {
                                 <th>SSS Deduct</th>
                                 <th>Pag-IBIG Deduct</th>
                                 <th>PhilHealth Deduct</th>
-                                <th>Net Salary</th>
                                 <th>Date Created</th>
                             </tr>
                         </thead>
@@ -122,12 +111,6 @@ if (!isset($_SESSION['loggedin'])) {
             return (parseFloat(weeklyPay) / 5).toFixed(2); // Assuming 5 working days in a week
         }
 
-        // Compute Net Salary
-        function computeNetSalary(weeklyPay, overtimePay, lateDeduct, sssDeduct, pagibigDeduct, philhealthDeduct) {
-            const deductions = parseFloat(lateDeduct) + parseFloat(sssDeduct) + parseFloat(pagibigDeduct) + parseFloat(philhealthDeduct);
-            return (parseFloat(weeklyPay) + parseFloat(overtimePay) - deductions).toFixed(2);
-        }
-
         // Load Payroll Records
         async function loadPayroll() {
             try {
@@ -140,14 +123,6 @@ if (!isset($_SESSION['loggedin'])) {
 
                     data.payroll.forEach(record => {
                         const dailyRate = computeDailyRate(record.basic_pay);
-                        const netSalary = computeNetSalary(
-                            record.basic_pay,
-                            record.overtime_pay,
-                            record.late_deduct,
-                            record.sss_deduct,
-                            record.pagibig_deduct,
-                            record.philhealth_deduct
-                        );
 
                         tbody.innerHTML += `
                             <tr>
@@ -160,7 +135,6 @@ if (!isset($_SESSION['loggedin'])) {
                                 <td>${record.sss_deduct}</td>
                                 <td>${record.pagibig_deduct}</td>
                                 <td>${record.philhealth_deduct}</td>
-                                <td>${netSalary}</td>
                                 <td>${record.date_created}</td>
                             </tr>
                         `;
