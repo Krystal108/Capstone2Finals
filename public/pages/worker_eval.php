@@ -1,15 +1,26 @@
 <?php
-session_start([
-]);
+session_start();
 
+// Check if form data is received
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Get the form data from the POST request
+    $username = isset($_POST['username']) ? htmlspecialchars($_POST['username']) : '';
+    $role = isset($_POST['role']) ? htmlspecialchars($_POST['role']) : '';
+    $user_department = isset($_POST['user_department']) ? htmlspecialchars($_POST['user_department']) : '';
 
+    // Store data in session if required for later use
+    $_SESSION['username'] = $username;
+    $_SESSION['role'] = $role;
+    $_SESSION['user_department'] = $user_department;
+
+    $_SESSION['loggedin'] = true;  // Set logged in state to true
+}
 
 // Check if the user is logged in
 if (!isset($_SESSION['loggedin'])) {
-    header('Location: ../welcome.php');
+    header('Location: /?page=login');
     exit();
 }
-
 ?>
 
 <!DOCTYPE html>
@@ -86,10 +97,10 @@ if (!isset($_SESSION['loggedin'])) {
                         <form method="GET" action="" class="form-inline">
                             <div class="input-group mb-3 flex-grow-1">
                                 <!-- Search input and button -->
-                                <input type="hidden" name="department" value="<?php echo htmlspecialchars($department); ?>">
-                                <input type="text" class="form-control" name="search_id" placeholder="Search by ID" value="<?php echo htmlspecialchars($searchId); ?>"style="border-radius: 10px 0 0 10px; border: 3px solid #131313; height:42px;">
+                                <input type="hidden" name="department" value="">
+                                <input type="text" class="form-control" name="search_id" placeholder="Search by ID" value=""style="border-radius: 10px 0 0 10px; border: 3px solid #131313; height:42px;">
                                 <div class="input-group-append">
-                                    <button class="btn btn-primary" type="submit" style="border-radius: 0; border: 3px solid #131313;">Search</button>
+                                    <button class="btn btn-primary" type="button" style="border-radius: 0; border: 3px solid #131313;" onclick="searchEmployeeEvaluation()">Search</button>
                                 </div>
                             </div>
                             <button class="btn btn-primary mb-3" type="button" data-toggle="modal" data-target="#addEvaluationModal" style="border-radius: 0 10px 10px 0; border: 3px solid #131313;">Add Evaluation</button>
@@ -116,7 +127,7 @@ if (!isset($_SESSION['loggedin'])) {
                                         
                                         <div>
                                             <form method="get" action="task_management.php">
-                                                <input type="hidden" name="department" value="<?php echo htmlspecialchars($department); ?>">
+                                                <input type="hidden" name="department" value="">
                                                 <input type="hidden" name="export" value="excel">
                                                 <button type="submit" class="btn btn-success">Export to Excel</button>
                                             </form>
@@ -183,23 +194,8 @@ if (!isset($_SESSION['loggedin'])) {
 
                                     </thead>
 
-                                    <tbody>
-                                        <?php foreach ($tasks as $task): ?>
-                                        <tr>
-                                            <td>
-                                                <!-- Make sure the checkbox is inside the form -->
-                                                <input type="checkbox" id="chkbx" name="task_checkbox[]" form="deleteForm" value="<?php echo $task['id']; ?>" onclick="updateSelectedCount(this)">
-                                            </td> <!-- Checkbox before ID -->
-                                            <td><?php echo $task['id']; ?></td>
-                                            <td><?php echo $task['employee_id']; ?></td>
-                                            <td><?php echo $task['name']; ?></td> <!-- Updated to 'Assigned' -->
-                                            <td><?php echo $task['position']; ?></td>
-                                            <td><?php echo $task['department']; ?></td>
-                                            <td><?php echo $task['start_date']; ?></td>
-                                            <td><?php echo $task['comments']; ?></td>
-                                            <td><?php echo $task['performance']; ?></td>
-                                        </tr>
-                                        <?php endforeach; ?>
+                                    <tbody class="evaluation-table">
+                                        
                                     </tbody>
                                 </table>
 
@@ -409,13 +405,6 @@ if (!isset($_SESSION['loggedin'])) {
         <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
         <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
         <script>
-            const clock = document.querySelector('.current-time');
-            const options = {hour: '2-digit', minute: '2-digit'};
-            const locale = 'en-PH';
-            setInterval(() => {
-                const now = new Date();
-                clock.textContent = now.toLocaleTimeString(locale, options);
-            }, 1000);
 
             // Change logo name 
             const logoName = document.querySelector('.logo_name');
@@ -433,35 +422,35 @@ if (!isset($_SESSION['loggedin'])) {
             printWindow.print();
             }
 
-            function updateSelectedCount(checkbox) {
-                var selectedCount = $('input[name="task_checkbox[]"]:checked').length;
-                $('#selected-count').text(selectedCount);
-            }
-
+           
             // Get the checkbox and delete button
             var checkbox = document.querySelector('input[name="task_checkbox[]"]');
             var deleteButton = document.querySelector('button[name="deleteTask"]');
 
-            // Function to toggle the delete button based on checkbox state
-            function toggleDeleteButton() {
-                var selectedCount = document.querySelectorAll('input[name="task_checkbox[]"]:checked').length;
-                deleteButton.disabled = selectedCount === 0;
+            function updateSelectedCount(checkbox) {
+                var selectedCount = $('input[name="task_checkbox[]"]:checked').length;
+                $('#selected-count').text(selectedCount);
+
+                // Enable or disable the delete button
+                if (selectedCount > 0) {
+                    $('button[name="deleteTask"]').prop('disabled', false);
+                } else {
+                    $('button[name="deleteTask"]').prop('disabled', true);
+                }
+
+                // Enable or disable the edit button
+                if (selectedCount === 1) {
+                    $('button[name="editTaskMod"]').prop('disabled', false);
+                } else {
+                    $('button[name="editTaskMod"]').prop('disabled', true);
+                }
+
+                // if there are more than one checkbox checked, disable the edit button
+                if (selectedCount > 1) {
+                    $('button[name="editTaskMod"]').prop('disabled', true);
+                }
             }
 
-            // Add event listener to the checkbox
-            checkbox.addEventListener('change', toggleDeleteButton);
-
-            // Get the checkbox and edit button
-            var editButton = document.querySelector('button[name="editTaskMod"]');
-
-            // Edit Button toggling based on checkbox state
-            document.querySelectorAll('input[name="task_checkbox[]"]').forEach(function(checkbox) {
-                checkbox.addEventListener('change', function() {
-                    var selectedCount = document.querySelectorAll('input[name="task_checkbox[]"]:checked').length;
-                    var editButton = document.querySelector('button[name="editTaskMod"]');
-                    editButton.disabled = selectedCount !== 1; // Only enable if one task is selected
-                });
-            });
 
             function toggle_filter() {
                 var sidebar = document.querySelector('.filter-sidebar');
@@ -471,6 +460,111 @@ if (!isset($_SESSION['loggedin'])) {
                     sidebar.style.right = '-300px';
                 }
             }
+
+            // search emplyee evaluation
+            async function searchEmployeeEvaluation() {
+                const searchId = document.querySelector('input[name="search_id"]').value;
+
+                const response = await fetch(`https://6dvfd2bd-5000.asse.devtunnels.ms/search-evaluation`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        search_id: searchId
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Display the data in the table
+                    const tableBody = document.querySelector('table tbody');
+                    tableBody.innerHTML = '';
+
+                    const evalCount = data.id.length;
+
+                    if (evalCount > 0) {
+                        for( let i = 0; i < evalCount; i++) {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td><input type="checkbox" name="task_checkbox[]" value="${data.id[i]}" onclick="updateSelectedCount(this)"></td>
+                                <td>${data.id[i]}</td>
+                                <td>${data.employee_id[i]}</td>
+                                <td>${data.name[i]}</td>
+                                <td>${data.position[i]}</td>
+                                <td>${data.department[i]}</td>
+                                <td>${data.start_date[i]}</td>
+                                <td>${data.comments[i]}</td>
+                                <td>${data.performance[i]}</td>
+                            `;
+
+                            tableBody.appendChild(row);
+                        }
+
+
+                    }
+                }
+                
+            }
+
+            // load evaluation data
+            async function loadEvaluationData() {
+                const response = await fetch(`https://6dvfd2bd-5000.asse.devtunnels.ms/load-evaluation`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                console.log(data);
+
+                if (data.success) {
+
+                    // get the evaluation table
+                    const tableBody = document.querySelector('.evaluation-table');
+                    tableBody.innerHTML = '';
+
+                    const evalCount = data.id.length;
+
+                    if (evalCount > 0) {
+                        for (let i = 0; i < evalCount; i++) {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td><input type="checkbox" name="task_checkbox[]" value="${data.id[i]}" onclick="updateSelectedCount(this)"></td>
+                                <td>${data.id[i]}</td>
+                                <td>${data.employee_id[i]}</td>
+                                <td>${data.name[i]}</td>
+                                <td>${data.position[i]}</td>
+                                <td>${data.department[i]}</td>
+                                <td>${data.start_date[i]}</td>
+                                <td>${data.comments[i]}</td>
+                                <td>${data.performance[i]}</td>
+                            `;
+
+                            tableBody.appendChild(row);
+                        }
+                    } else {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td colspan="9" style="text-align: center;">No evaluations found</td>
+                        `;
+
+                        tableBody.appendChild(row);
+                    }
+                
+                }
+            }
+
+            loadEvaluationData();
+
+            
+            // Call toggleDeleteButton when checkbox state changes
+            checkbox.addEventListener('change', toggleDeleteButton);
+        
+
         </script>
     </body>
 </html>
