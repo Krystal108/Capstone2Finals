@@ -57,143 +57,207 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_record'])) {
 <head>
     <meta charset="UTF-8">
     <title>Payroll System</title>
-    <link rel="stylesheet" href="style_index.css">
-    <link rel="stylesheet" href="dashboardnew.css">
-    <link rel="icon" type="image/x-icon" href="Superpack-Enterprise-Logo.png">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f4f4f4;
+        }
+
+        .header {
+            text-align: center;
+            background: #4c7742;
+            color: white;
+            padding: 20px;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background-color: #4c7742;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background-color: #337ab7;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+        }
+
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+
+        table th {
+            background-color: #4c7742;
+            color: white;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 10;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 5px;
+            width: 500px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-content h2 {
+            text-align: center;
+            color: #4c7742;
+        }
+    </style>
 </head>
 <body>
-    <?php include 'sidebar_small.php'; ?>
-    <div class="container-everything">
-        <div class="container-all">
-            <div class="container-top">
-                <?php include 'header_2.php'; ?>
-            </div>
+    <div class="header">
+        <h1>Payroll System</h1>
+    </div>
+    <div class="content">
+        <button class="btn" id="addRecordBtn">Add Record</button>
 
-            <!-- Search Bar -->
-            <div class="container-search">
-                <form method="GET" action="" class="form-inline">
-                    <input type="text" name="search_id" class="form-control" placeholder="Search by ID" style="margin-right:10px;">
-                    <button class="btn btn-primary" type="submit">Search</button>
-                    <button class="btn btn-success" type="button" data-toggle="modal" data-target="#addPayrollModal">Add Record</button>
-                </form>
-            </div>
-
-            <!-- Payroll Table -->
-            <div class="table-container">
-                <table class="table table-bordered">
-                    <thead>
+        <!-- Table -->
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Position</th>
+                    <th>Payslip Date</th>
+                    <th>Basic Pay</th>
+                    <th>Weekly Pay</th>
+                    <th>Net Pay</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (!empty($_SESSION['records'])): ?>
+                    <?php foreach ($_SESSION['records'] as $index => $record): ?>
                         <tr>
-                            <th>Name</th>
-                            <th>Position</th>
-                            <th>Payslip Date</th>
-                            <th>Basic Pay (Daily)</th>
-                            <th>Weekly Pay</th>
-                            <th>Overtime Pay</th>
-                            <th>Late Deduct</th>
-                            <th>Total Deductions</th>
-                            <th>Net Pay</th>
-                            <th>Actions</th>
+                            <td><?= $record['employee_name']; ?></td>
+                            <td><?= $record['position']; ?></td>
+                            <td><?= $record['payslip_date']; ?></td>
+                            <td>₱<?= number_format($record['basic_pay'], 2); ?></td>
+                            <td>₱<?= number_format($record['weekly_pay'], 2); ?></td>
+                            <td>₱<?= number_format($record['net_pay'], 2); ?></td>
+                            <td>
+                                <button class="btn btn-primary print-payslip" data-index="<?= $index; ?>">Print</button>
+                                <form method="POST" style="display:inline;">
+                                    <input type="hidden" name="delete_index" value="<?= $index; ?>">
+                                    <button type="submit" name="delete_record" class="btn btn-danger">Delete</button>
+                                </form>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($_SESSION['records'] as $index => $record): ?>
-                            <tr>
-                                <td><?php echo $record['employee_name']; ?></td>
-                                <td><?php echo $record['position']; ?></td>
-                                <td><?php echo $record['payslip_date']; ?></td>
-                                <td>₱<?php echo number_format($record['basic_pay'], 2); ?></td>
-                                <td>₱<?php echo number_format($record['weekly_pay'], 2); ?></td>
-                                <td>₱<?php echo number_format($record['overtime_pay'], 2); ?></td>
-                                <td>₱<?php echo number_format($record['late_deduct'], 2); ?></td>
-                                <td>₱<?php echo number_format($record['total_deductions'], 2); ?></td>
-                                <td>₱<?php echo number_format($record['net_pay'], 2); ?></td>
-                                <td>
-                                    <button class="btn btn-info btn-sm" onclick="printPayslip(<?php echo $index; ?>)">Print</button>
-                                    <form method="POST" style="display:inline;">
-                                        <input type="hidden" name="delete_index" value="<?php echo $index; ?>">
-                                        <button type="submit" name="delete_record" class="btn btn-danger btn-sm">Delete</button>
-                                    </form>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="7">No records found.</td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
     </div>
 
-    <!-- Add Payroll Modal -->
-    <div class="modal fade" id="addPayrollModal" tabindex="-1" role="dialog" aria-labelledby="addPayrollModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form method="POST">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="addPayrollModalLabel">New Payroll Record</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <input type="text" name="employee_name" placeholder="Employee Name" class="form-control mb-2" required>
-                        <input type="text" name="position" placeholder="Position" class="form-control mb-2" required>
-                        <input type="date" name="payslip_date" class="form-control mb-2" required>
-                        <input type="number" name="basic_pay" placeholder="Basic Pay (Daily)" class="form-control mb-2" required>
-                        <input type="number" name="days_per_week" placeholder="Days per Week" class="form-control mb-2" value="5" required>
-                        <input type="number" name="overtime_pay" placeholder="Overtime Pay" class="form-control mb-2">
-                        <input type="number" name="late_deduct" placeholder="Late Deduction" class="form-control mb-2">
-                        <input type="number" name="sss" placeholder="SSS Deduction" class="form-control mb-2">
-                        <input type="number" name="philhealth" placeholder="PhilHealth Deduction" class="form-control mb-2">
-                        <input type="number" name="pagibig" placeholder="Pag-IBIG Deduction" class="form-control mb-2">
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button type="submit" name="save_record" class="btn btn-primary">Save</button>
-                    </div>
-                </form>
-            </div>
+    <!-- Add Record Modal -->
+    <div id="recordModal" class="modal">
+        <div class="modal-content">
+            <h2>Add Payroll Record</h2>
+            <form method="POST">
+                <input type="hidden" name="save_record" value="1">
+                <input type="text" name="employee_name" placeholder="Employee Name" required>
+                <input type="text" name="position" placeholder="Position" required>
+                <input type="date" name="payslip_date" required>
+                <input type="number" name="basic_pay" placeholder="Basic Pay (Daily)" step="0.01" required>
+                <input type="number" name="days_per_week" placeholder="Days per Week" value="5" min="1" max="7" required>
+                <input type="number" name="overtime_pay" placeholder="Overtime Pay" step="0.01">
+                <input type="number" name="late_deduct" placeholder="Late Deduction" step="0.01">
+                <input type="number" name="sss" placeholder="SSS Deduction (Optional)" step="0.01">
+                <input type="number" name="philhealth" placeholder="PhilHealth Deduction (Optional)" step="0.01">
+                <input type="number" name="pagibig" placeholder="Pag-IBIG Deduction (Optional)" step="0.01">
+                <div class="modal-buttons">
+                    <button type="button" class="btn btn-secondary" id="closeAddModal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
         </div>
     </div>
 
     <!-- Print Payslip Modal -->
-    <div id="printPayslipModal" class="modal fade">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Payslip</h5>
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
-                </div>
-                <div class="modal-body" id="payslipContent"></div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button class="btn btn-primary" onclick="printPayslip()">Print</button>
-                </div>
+    <div id="printPayslipModal" class="modal">
+        <div class="modal-content">
+            <h2>Payslip</h2>
+            <div id="payslipContent"></div>
+            <div class="modal-buttons">
+                <button type="button" class="btn btn-secondary" id="closePrintModal">Back</button>
+                <button class="btn btn-success" onclick="printPayslip()">Print</button>
             </div>
         </div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script>
-        function printPayslip(index) {
-            const records = <?php echo json_encode($_SESSION['records']); ?>;
-            const record = records[index];
+        const addModal = document.getElementById('recordModal');
+        const printModal = document.getElementById('printPayslipModal');
+        const closeAddModal = document.getElementById('closeAddModal');
+        const closePrintModal = document.getElementById('closePrintModal');
 
-            const payslipHTML = `
-                <h5>${record.employee_name}'s Payslip</h5>
-                <p><strong>Date:</strong> ${record.payslip_date}</p>
-                <p><strong>Position:</strong> ${record.position}</p>
-                <p><strong>Basic Pay (Daily):</strong> ₱${record.basic_pay.toFixed(2)}</p>
-                <p><strong>Weekly Pay:</strong> ₱${record.weekly_pay.toFixed(2)}</p>
-                <p><strong>Overtime Pay:</strong> ₱${record.overtime_pay.toFixed(2)}</p>
-                <p><strong>Late Deduction:</strong> ₱${record.late_deduct.toFixed(2)}</p>
-                <p><strong>Total Deductions:</strong> ₱${record.total_deductions.toFixed(2)}</p>
-                <p><strong>Net Pay:</strong> ₱${record.net_pay.toFixed(2)}</p>
-            `;
-            document.getElementById('payslipContent').innerHTML = payslipHTML;
-            $('#printPayslipModal').modal('show');
+        document.getElementById('addRecordBtn').addEventListener('click', () => {
+            addModal.style.display = 'block';
+        });
+
+        closeAddModal.onclick = () => {
+            addModal.style.display = 'none';
+        };
+
+        closePrintModal.onclick = () => {
+            printModal.style.display = 'none';
+        };
+
+        document.querySelectorAll('.print-payslip').forEach((btn, index) => {
+            btn.addEventListener('click', () => {
+                const records = <?php echo json_encode($_SESSION['records']); ?>;
+                const record = records[index];
+                const payslipContent = `
+                    <div>
+                        <h3>${record.employee_name}'s Payslip</h3>
+                        <p><strong>Position:</strong> ${record.position}</p>
+                        <p><strong>Date:</strong> ${record.payslip_date}</p>
+                        <p><strong>Net Pay:</strong> ₱${record.net_pay}</p>
+                    </div>`;
+                document.getElementById('payslipContent').innerHTML = payslipContent;
+                printModal.style.display = 'block';
+            });
+        });
+
+        function printPayslip() {
+            const content = document.getElementById('payslipContent').innerHTML;
+            const printWindow = window.open('', '', 'width=800,height=600');
+            printWindow.document.write('<html><head><title>Payslip</title></head><body>' + content + '</body></html>');
+            printWindow.document.close();
+            printWindow.print();
         }
     </script>
 </body>
