@@ -1,133 +1,164 @@
 <?php
-// Start session at the very top
 session_start();
 
-// Check for logged-in status
-if (isset($_POST['loggedin'])) {
-    $_SESSION['loggedin'] = filter_var($_POST['loggedin'], FILTER_VALIDATE_BOOLEAN); // Convert string "true" to boolean true
+// Database Configuration
+$host = "localhost";
+$user = "root";
+$password = "";
+$database = "hrm_system";
+$port = 3307;
+
+// Connect to Database
+try {
+    $pdo = new PDO("mysql:host=$host;port=$port;dbname=$database", $user, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    die("Connection failed: " . $e->getMessage());
 }
 
-// Initialize variables to prevent undefined variable errors
-$department = $_GET['department'] ?? '';
-$searchId = $_GET['search_id'] ?? '';
-$tasks = isset($tasks) ? $tasks : []; // Ensure $tasks is an array if undefined
+// Handle Add Employee Form Submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['addEmployee'])) {
+    $name = $_POST['name'];
+    $position = $_POST['position'];
+    $address = $_POST['address'];
+    $phone_number = $_POST['phone_number'];
+    $email = $_POST['email'];
+    $birth_date = $_POST['birth_date'];
+    $emergency_contact = $_POST['emergency_contact'];
+    $hire_date = $_POST['hire_date'];
+
+    // File Handling
+    $file_name = null;
+    if (!empty($_FILES['file']['name'])) {
+        $file_name = basename($_FILES['file']['name']);
+        $file_path = "uploads/" . $file_name;
+
+        // Move Uploaded File
+        if (!move_uploaded_file($_FILES['file']['tmp_name'], $file_path)) {
+            $error_message = "Failed to upload the file.";
+        }
+    }
+
+    // Insert Employee Data
+    try {
+        $stmt = $pdo->prepare("INSERT INTO employees (name, position, address, phone_number, email, birth_date, emergency_contact, hire_date, file_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$name, $position, $address, $phone_number, $email, $birth_date, $emergency_contact, $hire_date, $file_name]);
+        $success_message = "Employee added successfully!";
+    } catch (PDOException $e) {
+        $error_message = "Error adding employee: " . $e->getMessage();
+    }
+}
+
+// Fetch Employees
+try {
+    $stmt = $pdo->query("SELECT * FROM employees ORDER BY id DESC");
+    $employees = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    die("Error fetching employees: " . $e->getMessage());
+}
 ?>
+
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Personnel Records</title>
-    <link rel="stylesheet" href="style_index.css">
-    <link rel="icon" type="image/x-icon" href="Superpack-Enterprise-Logo.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="dashboardnew.css">
+    <title>Employee Records</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
-    <?php 
-    // Include sidebar and filter sidebar
-    include 'sidebar_small.php'; 
-    include 'employee_filter_sidebar.php'; 
-    ?>
-    <div class="container-everything" style="height:100%;">
-        <div class="container-all">
-            <div class="container-top">
-                <?php include 'header_2.php'; ?>
-            </div>
-            <div class="container-search">
-                <div class="search-bar">
-                    <form method="GET" action="" class="form-inline">
-                        <div class="input-group mb-3 flex-grow-1">
-                            <!-- Hidden field for department -->
-                            <input type="hidden" name="department" value="<?php echo htmlspecialchars($department); ?>"> 
-                            <!-- Search field -->
-                            <input type="text" class="form-control" name="search_id" placeholder="Search by ID" 
-                                   value="<?php echo htmlspecialchars($searchId); ?>" 
-                                   style="border-radius: 10px 0 0 10px; border: 3px solid #131313; height:42px;">
-                            <div class="input-group-append">
-                                <button class="btn btn-primary" type="submit" style="border-radius: 0; border: 3px solid #131313;">Search</button>
-                            </div>
-                        </div>
-                        <button class="btn btn-primary mb-3" type="button" data-toggle="modal" data-target="#addTaskModal" 
-                                style="border-radius: 0 10px 10px 0 ; border: 3px solid #131313;">Add Employee</button>
-                    </form>
-                </div>
-            </div>
+    <div class="container mt-5">
+        <h1 class="text-center">Employee Records</h1>
 
-            <div class="container-bottom">
-                <div class="container-table">
-                    <div class="tool-bar">
-                        <div class="d-flex justify-content-between align-items-center mb-3" style="color:#fffafa;">
-                            <div>
-                                <span id="selected-count">0</span> items selected
-                            </div>
-                            <div class="d-flex align-items-center" style="gap:10px;">
-                                <form method="POST" id="deleteForm" style="display:inline;">
-                                    <button type="submit" name="deleteTask" class="btn btn-danger" disabled>Del</button>
-                                </form>
-                                <button class="btn btn-primary" name="editTaskMod" data-toggle="modal" 
-                                        data-target="#editTaskModal" disabled>Edit</button>
-                                <form method="get" action="task_management.php">
-                                    <input type="hidden" name="department" value="<?php echo htmlspecialchars($department); ?>">
-                                    <input type="hidden" name="export" value="excel">
-                                    <button type="submit" class="btn btn-success">Export to Excel</button>
-                                </form>
-                                <button class="btn btn-info" onclick="window.location.href='employee_list.php'">Reset</button>
-                                <button class="btn btn-warning" onclick="toggle_filter()">Filter</button>
-                            </div>
-                        </div>
-                    </div>
+        <!-- Display Success or Error Messages -->
+        <?php if (!empty($success_message)): ?>
+            <div class="alert alert-success"><?php echo $success_message; ?></div>
+        <?php elseif (!empty($error_message)): ?>
+            <div class="alert alert-danger"><?php echo $error_message; ?></div>
+        <?php endif; ?>
 
-                    <div class="table-container">
-                        <table class="table table-bordered table-striped">
-                            <thead>
-                                <tr>
-                                    <th class="checkbox-col"></th> <!-- Empty column for the checkbox -->
-                                    <th>Employee No</th>
-                                    <th>Name</th>
-                                    <th>Position</th>
-                                    <th>Shift</th>
-                                    <th>Salary</th>
-                                    <th>Start Date</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($tasks as $row): ?>
-                                    <tr>
-                                        <td>
-                                            <input type="checkbox" id="chkbx" name="task_checkbox[]" form="deleteForm" 
-                                                   value="<?php echo $row['id']; ?>" onclick="updateSelectedCount()">
-                                        </td>
-                                        <td><?php echo htmlspecialchars($row['id']); ?></td>
-                                        <td><?php echo htmlspecialchars($row['name']); ?></td>
-                                        <td><?php echo htmlspecialchars($row['position']); ?></td>
-                                        <td><?php echo htmlspecialchars($row['shift']); ?></td>
-                                        <td><?php echo htmlspecialchars($row['salary']); ?></td>
-                                        <td><?php echo htmlspecialchars($row['start_date']); ?></td>
-                                        <td><?php echo htmlspecialchars($row['status']); ?></td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+        <!-- Add Employee Form -->
+        <form method="POST" enctype="multipart/form-data" class="border p-4 mb-4 bg-light">
+            <h3>Add New Employee</h3>
+            <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" name="name" class="form-control" required>
             </div>
-        </div>
+            <div class="form-group">
+                <label>Position</label>
+                <input type="text" name="position" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label>Address</label>
+                <input type="text" name="address" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label>Phone Number</label>
+                <input type="text" name="phone_number" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" name="email" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label>Birth Date</label>
+                <input type="date" name="birth_date" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label>Emergency Contact</label>
+                <input type="text" name="emergency_contact" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label>Hire Date</label>
+                <input type="date" name="hire_date" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label>Upload Document (Optional)</label>
+                <input type="file" name="file" class="form-control-file" accept=".pdf,.doc,.docx">
+            </div>
+            <button type="submit" name="addEmployee" class="btn btn-primary">Add Employee</button>
+        </form>
+
+        <!-- Employee List -->
+        <h3>Employee List</h3>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Position</th>
+                    <th>Address</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th>Birth Date</th>
+                    <th>Emergency Contact</th>
+                    <th>Hire Date</th>
+                    <th>File</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($employees as $employee): ?>
+                    <tr>
+                        <td><?php echo $employee['id']; ?></td>
+                        <td><?php echo $employee['name']; ?></td>
+                        <td><?php echo $employee['position']; ?></td>
+                        <td><?php echo $employee['address']; ?></td>
+                        <td><?php echo $employee['phone_number']; ?></td>
+                        <td><?php echo $employee['email']; ?></td>
+                        <td><?php echo $employee['birth_date']; ?></td>
+                        <td><?php echo $employee['emergency_contact']; ?></td>
+                        <td><?php echo $employee['hire_date']; ?></td>
+                        <td>
+                            <?php if ($employee['file_name']): ?>
+                                <a href="uploads/<?php echo $employee['file_name']; ?>" download><?php echo $employee['file_name']; ?></a>
+                            <?php else: ?>
+                                No File
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
     </div>
-    <!-- Modal code unchanged -->
-<script>
-    // JavaScript for toggling buttons and count
-    function updateSelectedCount() {
-        const selectedCount = document.querySelectorAll('input[name="task_checkbox[]"]:checked').length;
-        document.getElementById('selected-count').textContent = selectedCount;
-
-        const deleteButton = document.querySelector('button[name="deleteTask"]');
-        const editButton = document.querySelector('button[name="editTaskMod"]');
-
-        deleteButton.disabled = selectedCount === 0;
-        editButton.disabled = selectedCount !== 1;
-    }
-</script>
 </body>
 </html>
