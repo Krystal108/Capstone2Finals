@@ -56,26 +56,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_record'])) {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Payroll System</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="style_index.css">
+    <link rel="stylesheet" href="dashboardnew.css">
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             background-color: #f4f4f4;
         }
-
         .header {
             text-align: center;
             background: #4c7742;
             color: white;
             padding: 20px;
         }
-
         .content {
             padding: 20px;
         }
-
         .btn {
             padding: 10px 20px;
             background-color: #4c7742;
@@ -84,29 +83,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_record'])) {
             border-radius: 5px;
             cursor: pointer;
         }
-
         .btn:hover {
             background-color: #337ab7;
         }
-
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
             background: white;
         }
-
         table th, table td {
             border: 1px solid #ddd;
             padding: 10px;
             text-align: left;
         }
-
         table th {
             background-color: #4c7742;
             color: white;
         }
-
         .modal {
             display: none;
             position: fixed;
@@ -118,26 +112,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_record'])) {
             overflow: auto;
             background-color: rgba(0, 0, 0, 0.5);
         }
-
         .modal-content {
             background-color: white;
             margin: 5% auto;
             padding: 20px;
             border-radius: 5px;
-            width: 500px;
+            width: 400px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
         }
-
         .modal-content h2 {
             text-align: center;
             color: #4c7742;
         }
+        .modal-content input {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        .cancel-btn {
+            background-color: #c0392b;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .cancel-btn:hover {
+            background-color: #e74c3c;
+        }
+        .print-btn {
+            background-color: #4c7742;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+        }
+        .print-btn:hover {
+            background-color: #337ab7;
+        }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Payroll System</h1>
-    </div>
+    <?php include 'sidebar_small.php'; ?>
     <div class="content">
         <button class="btn" id="addRecordBtn">Add Record</button>
 
@@ -145,11 +169,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_record'])) {
         <table>
             <thead>
                 <tr>
-                    <th>Name</th>
+                    <th>Employee Name</th>
                     <th>Position</th>
                     <th>Payslip Date</th>
                     <th>Basic Pay</th>
                     <th>Weekly Pay</th>
+                    <th>Overtime Pay</th>
+                    <th>Late Deduct</th>
+                    <th>Total Deductions</th>
                     <th>Net Pay</th>
                     <th>Actions</th>
                 </tr>
@@ -158,24 +185,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_record'])) {
                 <?php if (!empty($_SESSION['records'])): ?>
                     <?php foreach ($_SESSION['records'] as $index => $record): ?>
                         <tr>
-                            <td><?= $record['employee_name']; ?></td>
-                            <td><?= $record['position']; ?></td>
-                            <td><?= $record['payslip_date']; ?></td>
-                            <td>₱<?= number_format($record['basic_pay'], 2); ?></td>
-                            <td>₱<?= number_format($record['weekly_pay'], 2); ?></td>
-                            <td>₱<?= number_format($record['net_pay'], 2); ?></td>
+                            <td><?php echo htmlspecialchars($record['employee_name']); ?></td>
+                            <td><?php echo htmlspecialchars($record['position']); ?></td>
+                            <td><?php echo htmlspecialchars($record['payslip_date']); ?></td>
+                            <td>₱<?php echo number_format($record['basic_pay'], 2); ?></td>
+                            <td>₱<?php echo number_format($record['weekly_pay'], 2); ?></td>
+                            <td>₱<?php echo number_format($record['overtime_pay'], 2); ?></td>
+                            <td>₱<?php echo number_format($record['late_deduct'], 2); ?></td>
+                            <td>₱<?php echo number_format($record['total_deductions'], 2); ?></td>
+                            <td>₱<?php echo number_format($record['net_pay'], 2); ?></td>
                             <td>
-                                <button class="btn btn-primary print-payslip" data-index="<?= $index; ?>">Print</button>
+                                <button class="btn print-payslip" data-index="<?php echo $index; ?>">Print Payslip</button>
                                 <form method="POST" style="display:inline;">
-                                    <input type="hidden" name="delete_index" value="<?= $index; ?>">
-                                    <button type="submit" name="delete_record" class="btn btn-danger">Delete</button>
+                                    <input type="hidden" name="delete_index" value="<?php echo $index; ?>">
+                                    <button type="submit" name="delete_record" class="btn cancel-btn">Delete</button>
                                 </form>
                             </td>
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="7">No records found.</td>
+                        <td colspan="10">No records found.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>
@@ -195,70 +225,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_record'])) {
                 <input type="number" name="days_per_week" placeholder="Days per Week" value="5" min="1" max="7" required>
                 <input type="number" name="overtime_pay" placeholder="Overtime Pay" step="0.01">
                 <input type="number" name="late_deduct" placeholder="Late Deduction" step="0.01">
-                <input type="number" name="sss" placeholder="SSS Deduction (Optional)" step="0.01">
-                <input type="number" name="philhealth" placeholder="PhilHealth Deduction (Optional)" step="0.01">
-                <input type="number" name="pagibig" placeholder="Pag-IBIG Deduction (Optional)" step="0.01">
+                <input type="number" name="sss" placeholder="SSS Deduction" step="0.01">
+                <input type="number" name="philhealth" placeholder="PhilHealth Deduction" step="0.01">
+                <input type="number" name="pagibig" placeholder="Pag-IBIG Deduction" step="0.01">
                 <div class="modal-buttons">
-                    <button type="button" class="btn btn-secondary" id="closeAddModal">Close</button>
-                    <button type="submit" class="btn btn-primary">Save</button>
+                    <button type="button" class="cancel-btn" id="cancelModal">Cancel</button>
+                    <button type="submit" class="btn">Save</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Print Payslip Modal -->
-    <div id="printPayslipModal" class="modal">
-        <div class="modal-content">
-            <h2>Payslip</h2>
-            <div id="payslipContent"></div>
-            <div class="modal-buttons">
-                <button type="button" class="btn btn-secondary" id="closePrintModal">Back</button>
-                <button class="btn btn-success" onclick="printPayslip()">Print</button>
-            </div>
-        </div>
-    </div>
-
     <script>
-        const addModal = document.getElementById('recordModal');
-        const printModal = document.getElementById('printPayslipModal');
-        const closeAddModal = document.getElementById('closeAddModal');
-        const closePrintModal = document.getElementById('closePrintModal');
+        const modal = document.getElementById('recordModal');
+        const addRecordBtn = document.getElementById('addRecordBtn');
+        const cancelModal = document.getElementById('cancelModal');
 
-        document.getElementById('addRecordBtn').addEventListener('click', () => {
-            addModal.style.display = 'block';
-        });
-
-        closeAddModal.onclick = () => {
-            addModal.style.display = 'none';
+        addRecordBtn.onclick = () => {
+            modal.style.display = 'block';
         };
 
-        closePrintModal.onclick = () => {
-            printModal.style.display = 'none';
+        cancelModal.onclick = () => {
+            modal.style.display = 'none';
         };
 
         document.querySelectorAll('.print-payslip').forEach((btn, index) => {
             btn.addEventListener('click', () => {
                 const records = <?php echo json_encode($_SESSION['records']); ?>;
                 const record = records[index];
+
                 const payslipContent = `
-                    <div>
-                        <h3>${record.employee_name}'s Payslip</h3>
-                        <p><strong>Position:</strong> ${record.position}</p>
+                    <div style="text-align:center;">
+                        <h2>Superpack Enterprise</h2>
+                        <p>123 Business St., Meycauayan, Bulacan</p>
+                        <p>Contact: +63 912 345 6789 | Email: info@superpack.com</p>
+                        <hr>
+                        <h3>Payslip</h3>
                         <p><strong>Date:</strong> ${record.payslip_date}</p>
-                        <p><strong>Net Pay:</strong> ₱${record.net_pay}</p>
-                    </div>`;
-                document.getElementById('payslipContent').innerHTML = payslipContent;
-                printModal.style.display = 'block';
+                        <p><strong>Employee Name:</strong> ${record.employee_name}</p>
+                        <p><strong>Position:</strong> ${record.position}</p>
+                        <table style="width:100%; border-collapse: collapse;">
+                            <tr>
+                                <th>Earnings</th>
+                                <th>Amount</th>
+                            </tr>
+                            <tr>
+                                <td>Basic Pay</td>
+                                <td>₱${record.basic_pay.toFixed(2)}</td>
+                            </tr>
+                        </table>
+                    </div>
+                `;
+                const printWindow = window.open('', '', 'width=800,height=600');
+                printWindow.document.write(payslipContent);
+                printWindow.print();
             });
         });
-
-        function printPayslip() {
-            const content = document.getElementById('payslipContent').innerHTML;
-            const printWindow = window.open('', '', 'width=800,height=600');
-            printWindow.document.write('<html><head><title>Payslip</title></head><body>' + content + '</body></html>');
-            printWindow.document.close();
-            printWindow.print();
-        }
     </script>
 </body>
 </html>
